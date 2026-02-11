@@ -89,3 +89,35 @@ Coming soon...
 ## 📜 License
 
 MIT License
+
+```
+document_intelligence_ai
+├─ README.md
+├─ ROADMAP.md
+├─ docs
+│  ├─ agents_design.md
+│  ├─ data_model.md
+│  ├─ scalability_plan.md
+│  ├─ sdlc_plan.md
+│  ├─ system_design.md
+│  └─ vision.md
+├─ gateway
+├─ infrastructure
+│  ├─ Docker-compose.yml
+│  └─ Dockerfile
+├─ requirements.txt
+├─ services
+│  ├─ extraction_service
+│  ├─ ingestion_service
+│  ├─ obligation_service
+│  ├─ qa_service
+│  └─ risk_service
+├─ shared
+│  ├─ config
+│  ├─ database
+│  ├─ models
+│  └─ schemas
+├─ tests
+└─ workers
+
+```

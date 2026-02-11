@@ -1,7 +1,13 @@
 # Project Roadmap
 
+## Phase 0- [x] User DB model
+- [x] Authentication System
+- [x] Password hashing
+- [x] Register API
+- [x] Migration
+- [x] Test cases
+
 ## Phase 1
-- [ ] Authentication System
 - [ ] Upload API
 - [ ] Storage Service
 - [ ] Background Worker
