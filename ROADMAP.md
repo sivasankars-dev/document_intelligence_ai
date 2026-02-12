@@ -8,8 +8,9 @@
 - [x] Test cases
 
 ## Phase 1
-- [ ] Upload API
-- [ ] Storage Service
+- [x] Upload API
+- [x] Storage Service
+- [x] Docuement versioning
 - [ ] Background Worker
 
 ---
