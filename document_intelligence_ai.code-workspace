@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../auth-service"
+		},
+		{
+			"path": "../qr_rag"
+		}
+	],
+	"settings": {}
+}
