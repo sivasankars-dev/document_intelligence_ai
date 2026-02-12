@@ -5,6 +5,8 @@ from sqlalchemy import pool
 from shared.database.base import Base
 from shared.config.settings import settings
 from shared.models.user import User  
+from shared.models.document import Document
+from shared.models.document_version import DocumentVersion
 
 from alembic import context
 

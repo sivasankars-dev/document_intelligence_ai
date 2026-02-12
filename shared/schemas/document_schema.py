@@ -1,9 +1,13 @@
-from pydantic import BaseModel
+import uuid
+from datetime import datetime
+from pydantic import BaseModel, ConfigDict
+
 
 class DocumentResponse(BaseModel):
-    id: int
-    file_name: str
-    status: str
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    id: uuid.UUID
+    file_name: str
+    file_type: str
+    document_status: str
+    uploaded_at: datetime

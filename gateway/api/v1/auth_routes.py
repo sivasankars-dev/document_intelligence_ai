@@ -1,23 +1,68 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from shared.schemas.user_schema import UserCreate, UserResponse
+from gateway.dependencies.auth import get_current_user
 from shared.database.session import get_db
-from services.auth_service.auth_service import AuthService
+from shared.schemas.user_schema import (
+    LogoutResponse,
+    TokenResponse,
+    UserCreate,
+    UserLogin,
+    UserResponse,
+)
+from services.auth_service.auth_service import AuthService, get_auth_service
 
 router = APIRouter()
-auth_service = AuthService()
-
 
 @router.post("/register", response_model=UserResponse)
 def register(
     payload: UserCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
-    user = auth_service.create_user(
+    try:
+        user = auth_service.create_user(
+            db=db,
+            email=payload.email,
+            password=payload.password
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc)
+        ) from exc
+
+    return user
+
+
+@router.post("/login", response_model=TokenResponse)
+def login(
+    payload: UserLogin,
+    db: Session = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    user = auth_service.authenticate_user(
         db=db,
         email=payload.email,
         password=payload.password
     )
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
 
-    return user
+    access_token, expires_in = auth_service.create_access_token(user)
+    return TokenResponse(
+        access_token=access_token,
+        expires_in=expires_in,
+    )
+
+
+@router.post("/logout", response_model=LogoutResponse)
+def logout(
+    user=Depends(get_current_user),
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    auth_service.revoke_token(user["token"])
+    return LogoutResponse(message="Successfully logged out")
