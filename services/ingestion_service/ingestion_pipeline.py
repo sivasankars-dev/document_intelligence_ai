@@ -7,6 +7,7 @@ from shared.models.document import Document
 from services.ingestion_service.parser_service import extract_text_from_document
 from services.storage_service.storage_service import StorageService
 from services.extraction_service.vector_service import store_document_chunks
+from workers.tasks.extraction_tasks import extract_document_facts
 
 def run_ingestion_pipeline(document_id: str):
     db: Session = SessionLocal()
@@ -32,6 +33,7 @@ def run_ingestion_pipeline(document_id: str):
 
         document.document_status = "EXTRACTED"
         db.commit()
+        extract_document_facts.delay(document_id)
     except Exception:
         db.rollback()
         if document is not None:
@@ -46,3 +48,4 @@ def run_ingestion_pipeline(document_id: str):
         if downloaded_path and os.path.exists(downloaded_path):
             os.remove(downloaded_path)
         db.close()
+

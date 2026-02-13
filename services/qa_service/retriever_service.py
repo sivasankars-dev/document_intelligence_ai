@@ -1,7 +1,4 @@
-from langchain_openai import OpenAIEmbeddings
-from services.extraction_service.vector_service import collection
-
-embeddings = OpenAIEmbeddings()
+from services.extraction_service.vector_service import collection, embeddings
 
 def retrieve_document_chunks(query: str, document_id: str, top_k: int = 5):
     query_vector = embeddings.embed_query(query)
