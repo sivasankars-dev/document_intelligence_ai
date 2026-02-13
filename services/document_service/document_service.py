@@ -3,6 +3,10 @@ from shared.models.document import Document
 from shared.models.document_version import DocumentVersion
 from services.storage_service.storage_service import StorageService
 
+try:
+    from workers.tasks.ingestion_tasks import ingest_document_task
+except ModuleNotFoundError:
+    ingest_document_task = None
 
 class DocumentService:
     def __init__(self):
@@ -19,8 +23,7 @@ class DocumentService:
         )
 
         db.add(document)
-        db.commit()
-        db.refresh(document)
+        db.flush()
 
         # Create Version 1
         version = DocumentVersion(
@@ -30,5 +33,9 @@ class DocumentService:
 
         db.add(version)
         db.commit()
+        db.refresh(document)
+        
+        if ingest_document_task is not None:
+            ingest_document_task.delay(str(document.id))
 
         return document
