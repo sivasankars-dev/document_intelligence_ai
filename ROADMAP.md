@@ -11,20 +11,20 @@
 - [x] Upload API
 - [x] Storage Service
 - [x] Docuement versioning
-- [ ] Background Worker
+- [x] Background Worker
 
 ---
 
 ## Phase 2
-- [ ] Ingestion Agent
-- [ ] Text Extraction
-- [ ] Embeddings Storage
+- [x] Ingestion Agent
+- [x] Text Extraction
+- [x] Embeddings Storage
 
 ---
 
 ## Phase 3
-- [ ] Extraction Agent
-- [ ] Knowledge Graph
+- [x] Extraction Agent
+- [x] Knowledge Graph
 
 ---
 

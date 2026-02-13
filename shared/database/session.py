@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from shared.config.settings import settings
+import shared.models  # noqa: F401
 
 
 engine = create_engine(

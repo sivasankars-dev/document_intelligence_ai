@@ -92,8 +92,10 @@ MIT License
 
 ```
 document_intelligence_ai
+├─ Docker-compose.yml
 ├─ README.md
 ├─ ROADMAP.md
+├─ alembic.ini
 ├─ docs
 │  ├─ agents_design.md
 │  ├─ data_model.md
@@ -101,23 +103,82 @@ document_intelligence_ai
 │  ├─ sdlc_plan.md
 │  ├─ system_design.md
 │  └─ vision.md
+├─ document_intelligence_ai.code-workspace
 ├─ gateway
+│  ├─ __init__.py
+│  ├─ api
+│  │  ├─ __init__.py
+│  │  └─ v1
+│  │     ├─ __init__.py
+│  │     ├─ auth_routes.py
+│  │     ├─ document_routes.py
+│  │     └─ qa_routes.py
+│  ├─ dependencies
+│  │  └─ auth.py
+│  └─ main.py
 ├─ infrastructure
-│  ├─ Docker-compose.yml
 │  └─ Dockerfile
+├─ migrations
+│  ├─ README
+│  ├─ env.py
+│  ├─ script.py.mako
+├─ pytest.ini
 ├─ requirements.txt
 ├─ services
+│  ├─ __init__.py
+│  ├─ auth_service
+│  │  ├─ __init__.py
+│  │  └─ auth_service.py
+│  ├─ document_service
+│  │  ├─ __init__.py
+│  │  └─ document_service.py
 │  ├─ extraction_service
+│  │  ├─ chunking_service.py
+│  │  └─ vector_service.py
 │  ├─ ingestion_service
+│  │  ├─ __init__.py
+│  │  ├─ ingestion_service.py
+│  │  └─ parser_service.py
 │  ├─ obligation_service
 │  ├─ qa_service
-│  └─ risk_service
+│  │  ├─ prompt_service.py
+│  │  ├─ qa_pipeline.py
+│  │  └─ retriever_service.py
+│  ├─ risk_service
+│  └─ storage_service
+│     ├─ __init__.py
+│     └─ storage_service.py
 ├─ shared
+│  ├─ __init__.py
 │  ├─ config
+│  │  ├─ __init__.py
+│  │  └─ settings.py
 │  ├─ database
+│  │  ├─ __init__.py
+│  │  ├─ base.py
+│  │  └─ session.py
 │  ├─ models
+│  │  ├─ __init__.py
+│  │  ├─ document.py
+│  │  ├─ document_version.py
+│  │  └─ user.py
 │  └─ schemas
+│     ├─ __init__.py
+│     ├─ document_schema.py
+│     └─ user_schema.py
+├─ storage
+│  └─ vector_db
 ├─ tests
+│  ├─ __init__.py
+│  ├─ debug_vector_check.py
+│  ├─ test_auth_routes.py
+│  ├─ test_document_upload.py
+│  ├─ test_qa_routes.py
+│  └─ test_user_registration.py
 └─ workers
+   ├─ celery_app.py
+   └─ tasks
+      ├─ __init__.py
+      └─ ingestion_tasks.py
 
 ```
