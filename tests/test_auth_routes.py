@@ -24,11 +24,17 @@ class FakeAuthService:
             )
         return None
 
-    def create_access_token(self, user):
-        return "valid.jwt.token", 3600
+    def create_token_pair(self, user):
+        return "valid.jwt.token", 3600, "valid.refresh.token", 604800
 
     def revoke_token(self, token: str):
         self.revoked.add(token)
+
+    def refresh_access_token(self, db, refresh_token: str):
+        if refresh_token != "valid.refresh.token":
+            raise ValueError("Refresh token has been revoked")
+        user = SimpleNamespace(id=uuid.uuid4(), email="user@example.com", is_active=True)
+        return self.create_token_pair(user)
 
 
 def override_get_db():
@@ -48,8 +54,10 @@ def test_login_success():
         assert response.status_code == 200
         body = response.json()
         assert body["access_token"] == "valid.jwt.token"
+        assert body["refresh_token"] == "valid.refresh.token"
         assert body["token_type"] == "bearer"
         assert body["expires_in"] == 3600
+        assert body["refresh_expires_in"] == 604800
     finally:
         app.dependency_overrides.clear()
 
@@ -85,5 +93,25 @@ def test_logout_success():
         assert response.status_code == 200
         assert response.json()["message"] == "Successfully logged out"
         assert "valid.jwt.token" in fake_service.revoked
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_refresh_success():
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_auth_service] = lambda: FakeAuthService()
+
+    response = client.post(
+        "/api/v1/auth/refresh",
+        json={"refresh_token": "valid.refresh.token"},
+    )
+
+    try:
+        assert response.status_code == 200
+        body = response.json()
+        assert body["access_token"] == "valid.jwt.token"
+        assert body["refresh_token"] == "valid.refresh.token"
+        assert body["expires_in"] == 3600
+        assert body["refresh_expires_in"] == 604800
     finally:
         app.dependency_overrides.clear()

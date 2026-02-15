@@ -3,6 +3,7 @@ from shared.config.settings import settings
 
 from services.qa_service.retriever_service import retrieve_document_chunks
 from services.qa_service.prompt_service import build_qa_prompt
+from services.privacy_service.pii_redactor import redact_text
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
@@ -14,7 +15,8 @@ def run_qa_pipeline(question: str, document_id: str):
         return "No relevant information found."
 
     # Build prompt
-    prompt = build_qa_prompt(question, chunks)
+    safe_chunks = [redact_text(chunk)[0] for chunk in chunks]
+    prompt = build_qa_prompt(question, safe_chunks)
 
     # Call LLM
     response = client.chat.completions.create(
