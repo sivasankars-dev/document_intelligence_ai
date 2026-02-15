@@ -89,7 +89,6 @@ Coming soon...
 ## 📜 License
 
 MIT License
-
 ```
 document_intelligence_ai
 ├─ Docker-compose.yml
@@ -127,43 +126,60 @@ document_intelligence_ai
 ├─ services
 │  ├─ __init__.py
 │  ├─ auth_service
-│  │  ├─ __init__.py
+│  │  ├─ __init__.py  
 │  │  └─ auth_service.py
 │  ├─ document_service
-│  │  ├─ __init__.py
+│  │  ├─ __init__.py  
 │  │  └─ document_service.py
 │  ├─ extraction_service
+│  │  ├─ __init__.py 
 │  │  ├─ chunking_service.py
+│  │  ├─ extraction_llm.py
+│  │  ├─ extraction_pipeline.py
+│  │  ├─ extraction_prompt.py
+│  │  ├─ extraction_repository.py
 │  │  └─ vector_service.py
 │  ├─ ingestion_service
-│  │  ├─ __init__.py
-│  │  ├─ ingestion_service.py
+│  │  ├─ __init__.py 
+│  │  ├─ ingestion_pipeline.py
 │  │  └─ parser_service.py
 │  ├─ obligation_service
-│  ├─ qa_service
+│  │  ├─ __init__.py  
+│  │  ├─ llm_validator.py
+│  │  ├─ obligation_detector.py
+│  │  ├─ obligation_repository.py
+│  │  ├─ rule_engine.py
+│  │  └─ schemas.py
+│  ├─ privacy_service
+│  │  ├─ __init__.py  
+│  │  └─ pii_redactor.py
+│  ├─ qa_service 
 │  │  ├─ prompt_service.py
 │  │  ├─ qa_pipeline.py
 │  │  └─ retriever_service.py
 │  ├─ risk_service
+│  │  ├─ __init__.py
+│  │  └─ risk_detector.py
 │  └─ storage_service
-│     ├─ __init__.py
+│     ├─ __init__.py    
 │     └─ storage_service.py
 ├─ shared
 │  ├─ __init__.py
 │  ├─ config
-│  │  ├─ __init__.py
+│  │  ├─ __init__.py  
 │  │  └─ settings.py
 │  ├─ database
-│  │  ├─ __init__.py
+│  │  ├─ __init__.py  
 │  │  ├─ base.py
 │  │  └─ session.py
 │  ├─ models
-│  │  ├─ __init__.py
+│  │  ├─ __init__.py  
 │  │  ├─ document.py
 │  │  ├─ document_version.py
+│  │  ├─ extracted_fact.py
 │  │  └─ user.py
 │  └─ schemas
-│     ├─ __init__.py
+│     ├─ __init__.py     
 │     ├─ document_schema.py
 │     └─ user_schema.py
 ├─ storage
@@ -173,12 +189,20 @@ document_intelligence_ai
 │  ├─ debug_vector_check.py
 │  ├─ test_auth_routes.py
 │  ├─ test_document_upload.py
+│  ├─ test_extraction_worker.py
+│  ├─ test_llm_obligation_validator.py
+│  ├─ test_obligation_detector.py
+│  ├─ test_obligation_rule_engine.py
+│  ├─ test_obligation_schema.py
+│  ├─ test_pii_llm_guardrails.py
+│  ├─ test_pii_redactor.py
 │  ├─ test_qa_routes.py
 │  └─ test_user_registration.py
-└─ workers
+└─ workers 
    ├─ celery_app.py
    └─ tasks
       ├─ __init__.py
+      ├─ extraction_tasks.py
       └─ ingestion_tasks.py
 
 ```
