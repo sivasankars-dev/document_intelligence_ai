@@ -18,7 +18,21 @@ collection = chroma_client.get_or_create_collection(
     name="document_knowledge"
 )
 
-embeddings = OpenAIEmbeddings()
+
+class _LazyEmbeddings:
+    def __init__(self):
+        self._instance = None
+
+    def _get_instance(self):
+        if self._instance is None:
+            self._instance = OpenAIEmbeddings()
+        return self._instance
+
+    def __getattr__(self, name):
+        return getattr(self._get_instance(), name)
+
+
+embeddings = _LazyEmbeddings()
 
 def store_document_chunks(document_id: str, text: str):
     chunks = chunk_text(text)
