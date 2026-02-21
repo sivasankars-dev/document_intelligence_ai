@@ -24,3 +24,40 @@ def build_qa_prompt(question: str, context_chunks: list[str]) -> str:
     """
 
     return prompt
+
+
+def build_reasoning_qa_prompt(
+    question: str,
+    query_type: str,
+    context_chunks: list[str],
+    missing_info: list[str],
+) -> str:
+    context_text = "\n\n".join(
+        f"[EVIDENCE_{idx + 1}] {chunk}" for idx, chunk in enumerate(context_chunks)
+    )
+    missing_text = ", ".join(missing_info) if missing_info else "None identified"
+
+    prompt = f"""
+    You are a document reasoning assistant.
+
+    Query type: {query_type}
+
+    Rules:
+    1. Base your answer on evidence snippets only.
+    2. If evidence is incomplete, state assumptions and what is missing.
+    3. Do not refuse unless clearly unrelated to this document.
+    4. For comparison/recommendation queries, provide trade-offs.
+    5. Cite evidence IDs inline like [EVIDENCE_2].
+
+    Missing info hints: {missing_text}
+
+    DOCUMENT EVIDENCE:
+    {context_text}
+
+    USER QUESTION:
+    {question}
+
+    ANSWER:
+    """
+
+    return prompt

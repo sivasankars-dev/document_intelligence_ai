@@ -1,6 +1,7 @@
 import uuid
 from types import SimpleNamespace
 
+from fastapi import HTTPException, status
 from fastapi.testclient import TestClient
 
 from gateway.dependencies.auth import get_current_user
@@ -113,5 +114,30 @@ def test_refresh_success():
         assert body["refresh_token"] == "valid.refresh.token"
         assert body["expires_in"] == 3600
         assert body["refresh_expires_in"] == 604800
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_login_rate_limited(monkeypatch):
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_auth_service] = lambda: FakeAuthService()
+    monkeypatch.setattr(
+        "gateway.api.v1.auth_routes.enforce_rate_limit",
+        lambda **kwargs: (_ for _ in ()).throw(
+            HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Too many requests. Please try again later.",
+            )
+        ),
+    )
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "user@example.com", "password": "secret123"},
+    )
+
+    try:
+        assert response.status_code == 429
+        assert response.json()["detail"] == "Too many requests. Please try again later."
     finally:
         app.dependency_overrides.clear()

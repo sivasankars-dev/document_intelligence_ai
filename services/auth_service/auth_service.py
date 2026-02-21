@@ -4,6 +4,8 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
+from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHash, VerifyMismatchError
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
@@ -14,6 +16,7 @@ from shared.models.user import User
 class AuthService:
     _redis_client = None
     _fallback_store: dict[str, tuple[str, int]] = {}
+    _password_hasher = PasswordHasher()
 
     def __init__(self):
         if AuthService._redis_client is None:
@@ -58,20 +61,33 @@ class AuthService:
 
         self._fallback_store.pop(key, None)
 
-    def _pre_hash(self, password: str) -> str:
-        return hashlib.sha256(password.encode("utf-8")).hexdigest()
-
     def hash_password(self, password: str):
-        pre_hashed = self._pre_hash(password)
-        hashed = bcrypt.hashpw(pre_hashed.encode("utf-8"), bcrypt.gensalt())
-        return hashed.decode("utf-8")
+        return self._password_hasher.hash(password)
+
+    def _is_legacy_bcrypt_hash(self, hashed_password: str) -> bool:
+        return hashed_password.startswith("$2a$") or hashed_password.startswith("$2b$")
 
     def verify_password(self, plain_password: str, hashed_password: str):
-        pre_hashed = self._pre_hash(plain_password)
-        return bcrypt.checkpw(
-            pre_hashed.encode("utf-8"),
-            hashed_password.encode("utf-8")
-        )
+        # Verify current Argon2 hashes.
+        try:
+            return self._password_hasher.verify(hashed_password, plain_password)
+        except VerifyMismatchError:
+            return False
+        except InvalidHash:
+            pass
+        except Exception:
+            return False
+
+        # Backward compatibility for previously stored bcrypt hashes.
+        if self._is_legacy_bcrypt_hash(hashed_password):
+            try:
+                # Historical format in this project was bcrypt(sha256(password)).
+                pre_hashed = hashlib.sha256(plain_password.encode("utf-8")).hexdigest()
+                return bcrypt.checkpw(pre_hashed.encode("utf-8"), hashed_password.encode("utf-8"))
+            except Exception:
+                return False
+
+        return False
 
     def get_user_by_email(self, db: Session, email: str):
         return db.query(User).filter(User.email == email).first()
@@ -102,6 +118,21 @@ class AuthService:
 
         if not self.verify_password(password, user.password_hash):
             return None
+
+        # Migrate legacy bcrypt hashes to Argon2 after successful login.
+        if self._is_legacy_bcrypt_hash(user.password_hash):
+            user.password_hash = self.hash_password(password)
+            db.commit()
+            db.refresh(user)
+        else:
+            # Keep Argon2 parameters current over time.
+            try:
+                if self._password_hasher.check_needs_rehash(user.password_hash):
+                    user.password_hash = self.hash_password(password)
+                    db.commit()
+                    db.refresh(user)
+            except Exception:
+                pass
 
         if not user.is_active:
             return None

@@ -24,6 +24,11 @@ class FakeDocumentService:
         )
 
 
+class FakeInvalidDocumentService:
+    def upload_document(self, db, file, user_id):
+        raise ValueError("Unsupported content type: application/x-msdownload")
+
+
 def override_get_db():
     yield object()
 
@@ -46,5 +51,23 @@ def test_document_upload():
     try:
         assert response.status_code == 200
         assert response.json()["file_name"] == "test.pdf"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_document_upload_invalid_file():
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[get_document_service] = lambda: FakeInvalidDocumentService()
+
+    file_data = io.BytesIO(b"dummy content")
+    response = client.post(
+        "/api/v1/documents/upload",
+        files={"file": ("test.exe", file_data, "application/x-msdownload")},
+    )
+
+    try:
+        assert response.status_code == 400
+        assert "Unsupported content type" in response.json()["detail"]
     finally:
         app.dependency_overrides.clear()

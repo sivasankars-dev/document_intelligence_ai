@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from gateway.dependencies.auth import get_current_user
+from gateway.dependencies.rate_limit import enforce_rate_limit
 from shared.database.session import get_db
+from shared.config.settings import settings
 from shared.schemas.user_schema import (
     LogoutResponse,
     RefreshTokenRequest,
@@ -15,12 +17,32 @@ from services.auth_service.auth_service import AuthService, get_auth_service
 
 router = APIRouter()
 
+
+def _client_ip(request: Request) -> str:
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    if request.client and request.client.host:
+        return request.client.host
+    return "unknown"
+
+
+def _auth_rate_limit_key(action: str, request: Request, email: str) -> str:
+    return f"rate:auth:{action}:{_client_ip(request)}:{email.strip().lower()}"
+
 @router.post("/register", response_model=UserResponse)
 def register(
+    request: Request,
     payload: UserCreate,
     db: Session = Depends(get_db),
     auth_service: AuthService = Depends(get_auth_service),
 ):
+    enforce_rate_limit(
+        key=_auth_rate_limit_key("register", request, payload.email),
+        limit=settings.REGISTER_RATE_LIMIT_PER_WINDOW,
+        window_seconds=settings.AUTH_RATE_LIMIT_WINDOW_SECONDS,
+    )
+
     try:
         user = auth_service.create_user(
             db=db,
@@ -38,10 +60,17 @@ def register(
 
 @router.post("/login", response_model=TokenResponse)
 def login(
+    request: Request,
     payload: UserLogin,
     db: Session = Depends(get_db),
     auth_service: AuthService = Depends(get_auth_service),
 ):
+    enforce_rate_limit(
+        key=_auth_rate_limit_key("login", request, payload.email),
+        limit=settings.LOGIN_RATE_LIMIT_PER_WINDOW,
+        window_seconds=settings.AUTH_RATE_LIMIT_WINDOW_SECONDS,
+    )
+
     user = auth_service.authenticate_user(
         db=db,
         email=payload.email,

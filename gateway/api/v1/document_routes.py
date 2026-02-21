@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Depends
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from shared.database.session import get_db
@@ -19,10 +19,16 @@ def upload_document(
     user=Depends(get_current_user),
     document_service: DocumentService = Depends(get_document_service),
 ):
-    document = document_service.upload_document(
-        db=db,
-        file=file,
-        user_id=user["user_id"]
-    )
+    try:
+        document = document_service.upload_document(
+            db=db,
+            file=file,
+            user_id=user["user_id"]
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
 
     return document
