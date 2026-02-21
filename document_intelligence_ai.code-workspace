@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "../qr_rag"
+		},
+		{
+			"path": "../../Python/DSA"
 		}
 	],
 	"settings": {}

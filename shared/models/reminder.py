@@ -18,6 +18,8 @@ class Reminder(Base):
     status = Column(String, default="PENDING")
     channel = Column(String, default="IN_APP")
     retry_count = Column(Integer, default=0)
+    max_retries = Column(Integer, default=3)
     last_error = Column(String, nullable=True)
     locked_at = Column(DateTime, nullable=True)
+    status = Column(String, default="PENDING")
     created_at = Column(DateTime, default=datetime.utcnow)
