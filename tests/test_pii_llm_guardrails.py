@@ -126,10 +126,20 @@ def test_qa_pipeline_redacts_before_openai(monkeypatch):
         True,
     )
     monkeypatch.setattr(
-        "services.qa_service.qa_pipeline.retrieve_document_chunks",
-        lambda question, document_id: [
-            "Contact: john@example.com and SSN: 123-45-6789"
+        "services.qa_service.qa_pipeline.retrieve_document_evidence",
+        lambda query, document_id, top_k=6: [
+            {
+                "chunk_id": "doc-3:0:abc",
+                "document_id": document_id,
+                "chunk_index": 0,
+                "text": "Contact: john@example.com and SSN: 123-45-6789",
+                "distance": 0.2,
+            }
         ],
+    )
+    monkeypatch.setattr(
+        "services.qa_service.qa_pipeline.get_cache_service",
+        lambda: SimpleNamespace(get_json=lambda _key: None, set_json=lambda *_args, **_kwargs: None),
     )
 
     captured = {}

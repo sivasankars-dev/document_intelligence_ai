@@ -50,8 +50,16 @@ def test_qa_pipeline_uses_response_cache(monkeypatch):
         lambda: fake_cache,
     )
     monkeypatch.setattr(
-        "services.qa_service.qa_pipeline.retrieve_document_chunks",
-        lambda query, document_id: ["Policy has premium and due date clauses."],
+        "services.qa_service.qa_pipeline.retrieve_document_evidence",
+        lambda query, document_id, top_k=6: [
+            {
+                "chunk_id": f"{document_id}:0:abc",
+                "document_id": document_id,
+                "chunk_index": 0,
+                "text": "Policy has premium and due date clauses.",
+                "distance": 0.2,
+            }
+        ],
     )
 
     calls = {"count": 0}

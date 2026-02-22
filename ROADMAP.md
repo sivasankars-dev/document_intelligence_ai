@@ -29,17 +29,17 @@
 ---
 
 ## Phase 4
-- [ ] Risk Agent
+- [x] Risk Agent
 
 ---
 
 ## Phase 5
-- [ ] Obligation Agent
+- [x] Obligation Agent
 
 ---
 
 ## Phase 6
-- [ ] QA Agent
+- [x] QA Agent
 
 ---
 

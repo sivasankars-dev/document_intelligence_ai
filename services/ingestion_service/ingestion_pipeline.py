@@ -7,6 +7,7 @@ from shared.models.document import Document
 from services.ingestion_service.parser_service import extract_text_from_document
 from services.privacy_service.pii_redactor import redact_text
 from services.storage_service.storage_service import StorageService
+from services.risk_service.risk_detector import run_risk_detection_pipeline
 from workers.tasks.extraction_tasks import extract_document_facts
 
 
@@ -39,6 +40,10 @@ def run_ingestion_pipeline(document_id: str):
         redacted_text, redactions = redact_text(extracted_text)
         print("PII Redactions Applied:", len(redactions))
         _store_document_chunks(str(document.id), redacted_text)
+        try:
+            run_risk_detection_pipeline(str(document.id), redacted_text)
+        except Exception as risk_error:
+            print(f"Risk detection failed for document {document.id}: {risk_error}")
 
         document.document_status = "EXTRACTED"
         db.commit()

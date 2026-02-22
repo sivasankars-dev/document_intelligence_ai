@@ -8,3 +8,12 @@ class RiskRepository:
         db.commit()
         db.refresh(risk)
         return risk
+
+    @staticmethod
+    def get_by_document(db: Session, document_id):
+        return (
+            db.query(Risk)
+            .filter(Risk.document_id == document_id)
+            .order_by(Risk.created_at.desc())
+            .all()
+        )

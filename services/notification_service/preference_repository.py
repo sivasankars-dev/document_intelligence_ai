@@ -43,3 +43,37 @@ def get_user_preferences(db, user_id):
         ttl_seconds=settings.NOTIFICATION_PREF_CACHE_TTL_SECONDS,
     )
     return pref
+
+
+def upsert_user_preferences(db, user_id, payload: dict):
+    pref = (
+        db.query(NotificationPreference)
+        .filter(NotificationPreference.user_id == user_id)
+        .first()
+    )
+    if pref is None:
+        pref = NotificationPreference(user_id=user_id)
+        db.add(pref)
+
+    for field in [
+        "channel_priority",
+        "email_enabled",
+        "sms_enabled",
+        "push_enabled",
+        "quiet_hours_start",
+        "quiet_hours_end",
+    ]:
+        if field in payload and payload[field] is not None:
+            setattr(pref, field, payload[field])
+
+    db.commit()
+    db.refresh(pref)
+
+    cache = get_cache_service()
+    key = _cache_key(user_id)
+    cache.set_json(
+        key,
+        _serialize(pref),
+        ttl_seconds=settings.NOTIFICATION_PREF_CACHE_TTL_SECONDS,
+    )
+    return pref

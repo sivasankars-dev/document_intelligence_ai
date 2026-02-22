@@ -37,9 +37,9 @@ def test_failure_triggers_retry(monkeypatch):
 
     dispatch_reminder(reminder, user, db)
 
-    assert reminder.status == "FAILED"
-    assert reminder.retry_count == 0
-    assert reminder.last_error is None
+    assert reminder.status == "PENDING"
+    assert reminder.retry_count == 1
+    assert reminder.last_error == "provider down"
     assert db.commit_calls == 1
 
 
@@ -68,8 +68,9 @@ def test_max_retry_moves_to_dead_letter(monkeypatch):
 
     dispatch_reminder(reminder, user, db)
 
-    assert reminder.status == "FAILED"
-    assert reminder.retry_count == 3
+    assert reminder.status == "DEAD_LETTER"
+    assert reminder.retry_count == 4
+    assert reminder.last_error == "hard failure"
     assert db.commit_calls == 1
 
 
