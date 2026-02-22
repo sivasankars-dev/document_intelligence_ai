@@ -61,10 +61,22 @@ Mobile App(React Native) -> API Gateway(FastAPI) -> Agent Orchestrator -> Multi-
 - Chroma Vector DB
 
 ### Storage
-- AWS S3 / MinIO(Not yet decided)
+- Google Cloud Storage (GCS)
 
 ### Frontend
 - React Native
+
+---
+
+## 📄 Supported Document Types
+
+- PDF: `.pdf`
+- Text: `.txt`, `.md`
+- Word: `.docx`
+- Spreadsheets: `.csv`, `.xlsx`, `.xls`
+- Images (OCR): `.jpg`, `.jpeg`, `.png`
+- Email files: `.eml`, `.msg`
+- HTML: `.html`, `.htm`
 
 ---
 
@@ -77,6 +89,7 @@ See [ROADMAP.md](ROADMAP.md)
 ## 📚 Documentation
 
 All system documentation is inside `/docs`
+- Production readiness tracker: [`docs/production_readiness_checklist.md`](docs/production_readiness_checklist.md)
 
 ---
 
@@ -257,7 +270,7 @@ Gateway --> Auth[Auth Service]
 Gateway --> Document[Document Service]
 Gateway --> QA[QA Service]
 
-Document --> Storage[MinIO]
+Document --> Storage[GCS]
 Document --> Ingestion[Ingestion Service]
 
 Ingestion --> Queue[Redis / Celery Queue]
@@ -294,4 +307,3 @@ Reminder->>Dispatcher: Send Notification
 
 Dispatcher->>Notification: Email/SMS/Push
 ```
-

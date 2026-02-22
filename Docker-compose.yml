@@ -21,14 +21,11 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-change_me}@postgres:5432/${POSTGRES_DB:-document_intelligence_ai}
       REDIS_URL: redis://redis:6379/0
-      MINIO_ENDPOINT: minio:9000
       CHROMA_DIR: /app/chroma_db
     depends_on:
       migrate:
         condition: service_completed_successfully
       redis:
-        condition: service_started
-      minio:
         condition: service_started
     ports:
       - "8000:8000"
@@ -45,14 +42,11 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-change_me}@postgres:5432/${POSTGRES_DB:-document_intelligence_ai}
       REDIS_URL: redis://redis:6379/0
-      MINIO_ENDPOINT: minio:9000
       CHROMA_DIR: /app/chroma_db
     depends_on:
       migrate:
         condition: service_completed_successfully
       redis:
-        condition: service_started
-      minio:
         condition: service_started
     volumes:
       - chroma_data:/app/chroma_db
@@ -77,16 +71,6 @@ services:
     image: redis:7
     ports:
       - "127.0.0.1:6379:6379"
-
-  minio:
-    image: minio/minio
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
-    command: server /data --address ":9000" --console-address ":9090"
-    ports:
-      - "127.0.0.1:9000:9000"
-      - "127.0.0.1:9090:9090"
 
 volumes:
   postgres_data:

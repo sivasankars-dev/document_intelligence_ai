@@ -1,5 +1,6 @@
 from shared.database.session import SessionLocal
 from shared.models.reminder import Reminder
+from workers.tasks.reminder_tasks import _get_user_for_reminder
 
 try:
     from workers.celery_app import celery_app
@@ -9,17 +10,24 @@ except ModuleNotFoundError:
 def _process_single_reminder_impl(self, reminder_id):
     db = SessionLocal()
     try:
-        reminder = db.query(Reminder).get(reminder_id)
+        reminder = db.get(Reminder, reminder_id)
         if not reminder or reminder.status != "PENDING":
             return
-        # 🔔 Simulated Notification
-        print(f"Sending reminder {reminder.id}")
-        reminder.status = "SENT"
-        db.commit()
+        from workers.tasks.reminder_dispatcher import dispatch_reminder
+
+        user = _get_user_for_reminder(db, reminder)
+        if user is None:
+            reminder.status = "DEAD_LETTER"
+            reminder.last_error = "User not found for reminder obligation"
+            db.commit()
+            return
+
+        dispatch_reminder(reminder, user, db)
     except Exception as e:
-        reminder.retry_count += 1
-        reminder.last_error = str(e)
-        db.commit()
+        if reminder is not None:
+            reminder.retry_count = (reminder.retry_count or 0) + 1
+            reminder.last_error = str(e)
+            db.commit()
         if self is not None:
             raise self.retry(exc=e, countdown=30)
         raise

@@ -1,4 +1,4 @@
-import uuid
+import hashlib
 import chromadb
 from chromadb.config import Settings
 from langchain_openai import OpenAIEmbeddings
@@ -36,13 +36,25 @@ embeddings = _LazyEmbeddings()
 
 def store_document_chunks(document_id: str, text: str):
     chunks = chunk_text(text)
-    
+
     if not chunks:
         return
 
+    # Keep chunk IDs stable and avoid duplicate rows on re-ingestion.
+    try:
+        collection.delete(where={"document_id": document_id})
+    except Exception:
+        pass
+
     vectors = embeddings.embed_documents(chunks)
-    ids = [str(uuid.uuid4()) for _ in chunks]
-    metadata = [{"document_id": document_id} for _ in chunks]
+    ids = []
+    metadata = []
+    for idx, chunk in enumerate(chunks):
+        chunk_hash = hashlib.sha1(chunk.encode("utf-8")).hexdigest()[:12]
+        chunk_id = f"{document_id}:{idx}:{chunk_hash}"
+        ids.append(chunk_id)
+        metadata.append({"document_id": document_id, "chunk_index": idx})
+
     collection.add(
         documents=chunks,
         embeddings=vectors,

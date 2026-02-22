@@ -5,4 +5,4 @@ from .extracted_fact import ExtractedFact
 from .risk import Risk
 from .obligation import Obligation
 from .reminder import Reminder
-
+from .notification_log import NotificationLog

@@ -29,13 +29,27 @@ def build_qa_prompt(question: str, context_chunks: list[str]) -> str:
 def build_reasoning_qa_prompt(
     question: str,
     query_type: str,
-    context_chunks: list[str],
+    context_chunks: list[dict],
     missing_info: list[str],
+    thread_context: list[dict] | None = None,
 ) -> str:
-    context_text = "\n\n".join(
-        f"[EVIDENCE_{idx + 1}] {chunk}" for idx, chunk in enumerate(context_chunks)
-    )
+    context_text = "\n\n".join([
+        (
+            f"[EVIDENCE_{idx + 1}] "
+            f"(document_id={chunk.get('document_id')}, chunk_id={chunk.get('chunk_id')}) "
+            f"{chunk.get('text', '')}"
+        )
+        for idx, chunk in enumerate(context_chunks)
+    ])
     missing_text = ", ".join(missing_info) if missing_info else "None identified"
+    thread_text = "No prior thread context."
+    if thread_context:
+        thread_text = "\n".join(
+            [
+                f"Q: {turn.get('question', '')}\nA: {turn.get('answer', '')}"
+                for turn in thread_context
+            ]
+        )
 
     prompt = f"""
     You are a document reasoning assistant.
@@ -48,8 +62,13 @@ def build_reasoning_qa_prompt(
     3. Do not refuse unless clearly unrelated to this document.
     4. For comparison/recommendation queries, provide trade-offs.
     5. Cite evidence IDs inline like [EVIDENCE_2].
+    6. If prior thread context exists, use it only to clarify follow-up intent.
+       Never override current evidence with thread memory.
 
     Missing info hints: {missing_text}
+
+    PRIOR THREAD CONTEXT:
+    {thread_text}
 
     DOCUMENT EVIDENCE:
     {context_text}

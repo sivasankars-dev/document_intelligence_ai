@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     CACHE_ENABLED: bool = True
     QA_RETRIEVAL_CACHE_TTL_SECONDS: int = 900
     QA_RESPONSE_CACHE_TTL_SECONDS: int = 300
+    QA_THREAD_TTL_SECONDS: int = 86400
+    QA_THREAD_MAX_TURNS: int = 6
     NOTIFICATION_PREF_CACHE_TTL_SECONDS: int = 300
     AUTH_RATE_LIMIT_WINDOW_SECONDS: int = 60
     LOGIN_RATE_LIMIT_PER_WINDOW: int = 10
@@ -20,24 +22,48 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
 
     CHROMA_DIR: str = "./chroma_db"
-    MINIO_ENDPOINT: str = "localhost:9000"
-    MINIO_ACCESS_KEY: str = "minioadmin"
-    MINIO_SECRET_KEY: str = "minioadmin"
-    MINIO_SECURE: bool = False
-    MINIO_BUCKET: str = "documents"
+    GCS_BUCKET: str = "documents"
+    GCP_PROJECT_ID: str | None = None
+    GCS_CREDENTIALS_FILE: str | None = None
+    GCS_CREDENTIALS_JSON: str | None = None
     MAX_UPLOAD_SIZE_MB: int = 20
-    ALLOWED_UPLOAD_CONTENT_TYPES: str = "application/pdf,text/plain"
-    ALLOWED_UPLOAD_EXTENSIONS: str = ".pdf,.txt"
+    ALLOWED_UPLOAD_CONTENT_TYPES: str = (
+        "application/pdf,"
+        "text/plain,"
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document,"
+        "text/csv,"
+        "application/vnd.ms-excel,"
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,"
+        "image/jpeg,"
+        "image/png,"
+        "message/rfc822,"
+        "application/vnd.ms-outlook,"
+        "text/html"
+    )
+    ALLOWED_UPLOAD_EXTENSIONS: str = ".pdf,.txt,.docx,.csv,.xlsx,.xls,.jpg,.jpeg,.png,.eml,.msg,.html,.htm"
     PII_REDACTION_ENABLED: bool = True
     JWT_SECRET_KEY: str = "siva_jwt_secret_key"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     REMINDER_BATCH_SIZE: int = 50
+    NOTIFICATION_DRY_RUN: bool = True
+    NOTIFICATION_EMAIL_FROM: str = "noreply@example.com"
+    SMTP_HOST: str | None = None
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str | None = None
+    SMTP_PASSWORD: str | None = None
+    SMTP_USE_TLS: bool = True
+    SMS_PROVIDER_URL: str | None = None
+    SMS_PROVIDER_TOKEN: str | None = None
+    PUSH_PROVIDER_URL: str | None = None
+    PUSH_PROVIDER_TOKEN: str | None = None
+    NOTIFICATION_AUTO_RETRY: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",
-        case_sensitive=True
+        case_sensitive=True,
+        extra="ignore",
     )
 
     @model_validator(mode="after")
@@ -55,11 +81,8 @@ class Settings(BaseSettings):
         if self.JWT_SECRET_KEY in weak_jwt or len(self.JWT_SECRET_KEY) < 32:
             raise ValueError("JWT_SECRET_KEY is weak for non-development environment")
 
-        if self.MINIO_ACCESS_KEY == "minioadmin" or self.MINIO_SECRET_KEY == "minioadmin":
-            raise ValueError("MinIO credentials must be changed for non-development environment")
-
-        if not self.MINIO_SECURE:
-            raise ValueError("MINIO_SECURE must be true for non-development environment")
+        if not self.GCS_BUCKET:
+            raise ValueError("GCS_BUCKET must be configured for non-development environment")
 
         return self
 

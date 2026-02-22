@@ -138,3 +138,45 @@ def test_ask_question_forbidden_when_document_not_owned():
         assert response.json()["detail"] == "You do not have access to this document"
     finally:
         app.dependency_overrides.clear()
+
+
+def test_ask_question_multi_document_reasoning(monkeypatch):
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[get_db] = _override_get_db_owned
+    monkeypatch.setattr(
+        "gateway.api.v1.qa_routes.run_qa_pipeline_with_metadata_for_documents",
+        lambda question, document_ids, thread_id=None, user_id=None: {
+            "answer": "Comparison answer",
+            "query_type": "comparison",
+            "confidence": 0.76,
+            "confidence_band": "high",
+            "missing_information": [],
+            "evidence_count": 4,
+            "document_ids": document_ids,
+            "citations": [],
+            "thread_id": thread_id,
+        },
+    )
+
+    response = client.post(
+        "/api/v1/qa/ask",
+        json={
+            "question": "compare these policies",
+            "document_ids": [
+                "4af7a36f-a262-43e8-bc78-376cbe94383e",
+                "b64040e8-1e9c-4141-93d0-b71d99ec9099",
+            ],
+            "include_reasoning": True,
+            "thread_id": "thread-123",
+        },
+    )
+
+    try:
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["answer"] == "Comparison answer"
+        assert payload["query_type"] == "comparison"
+        assert payload["thread_id"] == "thread-123"
+        assert len(payload["document_ids"]) == 2
+    finally:
+        app.dependency_overrides.clear()
